@@ -1,23 +1,24 @@
 package main
 
 const (
-	HT_Ping = 0
+	HT_Ping = 1
+	HT_Date = 2
 )
 
 type HandlerFactory struct {
-	handlers map[uint8](func() Handler)
+	handlers map[uint16](func() Handler)
 }
 
 func NewHandlerFactory() (hf *HandlerFactory) {
-	hf = &HandlerFactory{handlers: make(map[uint8](func() Handler))}
+	hf = &HandlerFactory{handlers: make(map[uint16](func() Handler))}
 	return hf
 }
 
-func (this *HandlerFactory) AddHandler(handlerId uint8, builder func() Handler) {
+func (this *HandlerFactory) AddHandler(handlerId uint16, builder func() Handler) {
 	this.handlers[handlerId] = builder
 }
 
-func (this *HandlerFactory) CreateHandler(handlerId uint8) Handler {
+func (this *HandlerFactory) CreateHandler(handlerId uint16) Handler {
 	if builder, ok := this.handlers[handlerId]; ok {
 		return builder()
 	}

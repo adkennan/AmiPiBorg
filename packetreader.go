@@ -69,6 +69,7 @@ func (this *PacketReader) processBuffer(buf []byte) {
 
 	ij := 0
 	packetCount := 0
+	var pacBuf []byte
 	for ij <= maxIx {
 		ix := ij
 		found := false
@@ -76,6 +77,7 @@ func (this *PacketReader) processBuffer(buf []byte) {
 
 			id := binary.BigEndian.Uint32(this.buf[ix:])
 			if id == PACKET_ID {
+				pacBuf = this.buf[ix:]
 				ix += 4
 				found = true
 				break
@@ -106,9 +108,7 @@ func (this *PacketReader) processBuffer(buf []byte) {
 		connId := binary.BigEndian.Uint16(this.buf[ix:])
 		ix += 2
 		packId := binary.BigEndian.Uint16(this.buf[ix:])
-		ix += 2
-		// TODO: Checksum...
-		ix += 2
+		ix += 4 // Skip checksum
 		length := binary.BigEndian.Uint16(this.buf[ix:])
 		ix += 2
 
@@ -116,6 +116,13 @@ func (this *PacketReader) processBuffer(buf []byte) {
 			// Not enough bytes for all the data
 			this.buf = this.buf[ij:]
 			return
+		}
+
+		checksum := calculateChecksum(pacBuf, length+14)
+		if checksum != 0xffff {
+			fmt.Printf("Bad checksum\n")
+			//			this.buf = this.buf[ix:]
+			//			return
 		}
 
 		packet := &InPacket{
@@ -134,5 +141,10 @@ func (this *PacketReader) processBuffer(buf []byte) {
 		}
 	}
 
-	this.buf = this.buf[:0]
+	if ij >= len(this.buf) {
+		this.buf = this.buf[:0]
+	} else {
+		fmt.Printf("Clearing %d of %d bytes from buffer.\n", ij, len(this.buf))
+		this.buf = this.buf[ij:]
+	}
 }

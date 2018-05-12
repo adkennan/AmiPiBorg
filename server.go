@@ -46,7 +46,7 @@ func NewServer(remote Remote, handlerFac *HandlerFactory) (srv *Server) {
 		state:          SS_Disconnected,
 		packId:         1,
 		connChan:       make(chan *OutPacket, 100),
-		connections:    make(map[uint16]*Connection),
+		connections:    nil,
 		handlerFactory: handlerFac,
 		recentPackets:  make([]*OutPacket, MaxRecentPackets+1)}
 
@@ -67,6 +67,7 @@ func (this *Server) HandleControlPacket(p *InPacket) {
 		this.state = SS_Connected
 		this.packId = 1
 		this.WritePacket(DEFAULT_CONNECTION, MT_Hello, []byte{})
+		this.connections = make(map[uint16]*Connection)
 		fmt.Printf("Server Connected\n")
 
 	case MT_Ping:
@@ -84,7 +85,7 @@ func (this *Server) HandleControlPacket(p *InPacket) {
 
 func (this *Server) CreateConnection(p *InPacket) {
 
-	handlerId := uint8(p.Data[0])
+	handlerId := binary.BigEndian.Uint16(p.Data)
 
 	h := this.handlerFactory.CreateHandler(handlerId)
 	if h == nil {

@@ -28,3 +28,19 @@ const (
 	PF_PadByte = 0x01
 	PF_Resend  = 0x02
 )
+
+func calculateChecksum(data []byte, length uint16) uint16 {
+
+	sum := uint32(0)
+
+	for ix := uint16(0); ix < length; ix += 2 {
+		x := uint16(data[ix])<<8 + uint16(data[ix+1])
+		sum += uint32(x)
+	}
+
+	for sum>>16 > 0 {
+		sum = (sum & 0xffff) + (sum >> 16)
+	}
+
+	return uint16((^sum) + 1)
+}

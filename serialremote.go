@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go.bug.st/serial.v1"
 )
 
@@ -79,6 +80,8 @@ func (this *SerialRemote) run() {
 		}
 
 		if bytesRead > 0 {
+
+			fmt.Printf("Read %d bytes\n", bytesRead)
 
 			this.readChan <- buf[0:bytesRead]
 		}

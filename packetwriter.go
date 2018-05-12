@@ -48,7 +48,13 @@ func (this *PacketWriter) Write(packType uint8, flags uint8, connId uint16, pack
 		}
 	}
 
-	_, err = this.remote.Write(buf.Bytes())
+	b := buf.Bytes()
+	checksum := calculateChecksum(b, uint16(len(b)))
+	b[10] = byte((checksum >> 8) & 0xff)
+	b[11] = byte(checksum & 0xff)
+	_, err = this.remote.Write(b)
+
+	fmt.Printf("Wrote %d bytes, %x\n", buf.Len(), checksum)
 
 	return err
 }

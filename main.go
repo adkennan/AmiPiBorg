@@ -7,6 +7,7 @@ func main() {
 	hf := NewHandlerFactory()
 
 	hf.AddHandler(HT_Ping, NewPingHandler)
+	hf.AddHandler(HT_Date, NewDateHandler)
 
 	srv := NewServer(r, hf)
 
