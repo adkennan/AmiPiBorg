@@ -46,4 +46,5 @@ func (this *Connection) Run() {
 		}
 	}
 
+	this.handler.Quit()
 }

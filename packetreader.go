@@ -7,6 +7,7 @@ import (
 
 type InPacket struct {
 	PacketType uint8
+	Flags      uint8
 	ConnId     uint16
 	PacketId   uint16
 	Length     uint16
@@ -73,18 +74,18 @@ func (this *PacketReader) processBuffer(buf []byte) {
 	for ij <= maxIx {
 		ix := ij
 		found := false
-		for ix <= maxIx {
+		//for ix <= maxIx {
 
-			id := binary.BigEndian.Uint32(this.buf[ix:])
-			if id == PACKET_ID {
-				pacBuf = this.buf[ix:]
-				ix += 4
-				found = true
-				break
-			}
-
-			ix++
+		id := binary.BigEndian.Uint32(this.buf[ix:])
+		if id == PACKET_ID {
+			pacBuf = this.buf[ix:]
+			ix += 4
+			found = true
+			//		break
 		}
+
+		//	ix++
+		//}
 
 		if !found {
 			// No packet found at all.
@@ -121,12 +122,13 @@ func (this *PacketReader) processBuffer(buf []byte) {
 		checksum := calculateChecksum(pacBuf, length+14)
 		if checksum != 0xffff {
 			fmt.Printf("Bad checksum\n")
-			//			this.buf = this.buf[ix:]
-			//			return
+			this.buf = this.buf[ix:]
+			return
 		}
 
 		packet := &InPacket{
 			PacketType: pacType,
+			Flags:      pacFlags,
 			ConnId:     connId,
 			PacketId:   packId,
 			Length:     length,

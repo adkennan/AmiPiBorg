@@ -5,5 +5,5 @@ type Remote interface {
 	Open() (err error)
 	Close()
 	GetReadChan() (readChan chan []byte)
-	Write(data []byte) (bytesWritten int, err error)
+	Write(data []byte)
 }

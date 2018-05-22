@@ -31,6 +31,9 @@ func (this *DateHandler) Init(outChan chan *OutPacket) {
 func (this *DateHandler) HandlePacket(p *InPacket) {
 }
 
+func (this *DateHandler) Quit() {
+}
+
 func NewDateHandler() Handler {
 	return &DateHandler{}
 }

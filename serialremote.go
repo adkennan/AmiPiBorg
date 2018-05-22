@@ -1,8 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"go.bug.st/serial.v1"
+	//"go.bug.st/serial.v1"
+	"github.com/tarm/serial"
+	"time"
 )
 
 type SerialRemote struct {
@@ -10,8 +11,10 @@ type SerialRemote struct {
 	readChan   chan []byte
 	devName    string
 	baud       int
-	port       serial.Port
+	port       *serial.Port
 	running    bool
+	writeChan  chan []byte
+	ctrlChan   chan bool
 }
 
 func NewSerialRemote(devName string, baud int) (sr *SerialRemote, err error) {
@@ -21,7 +24,10 @@ func NewSerialRemote(devName string, baud int) (sr *SerialRemote, err error) {
 		readChan:   make(chan []byte, 10),
 		devName:    devName,
 		baud:       baud,
-		port:       nil}
+		port:       nil,
+		running:    false,
+		writeChan:  make(chan []byte, 100),
+		ctrlChan:   make(chan bool)}
 
 	return sr, nil
 }
@@ -34,19 +40,29 @@ func (this *SerialRemote) Init(bufferPool *BufferPool) (err error) {
 
 func (this *SerialRemote) Open() (err error) {
 
-	config := &serial.Mode{
+	/*config := &serial.Mode{
 		BaudRate: this.baud,
 		DataBits: 8,
 		Parity:   serial.NoParity,
 		StopBits: serial.OneStopBit}
 
 	this.port, err = serial.Open(this.devName, config)
+	*/
+	config := &serial.Config{
+		Name:     this.devName,
+		Baud:     9600,
+		Size:     serial.DefaultSize,
+		Parity:   serial.ParityNone,
+		StopBits: serial.Stop1}
+
+	this.port, err = serial.OpenPort(config)
 	if err != nil {
 		return err
 	}
 
 	this.running = true
-	go this.run()
+	go this.reader()
+	go this.writer()
 	return nil
 }
 
@@ -64,12 +80,25 @@ func (this *SerialRemote) GetReadChan() (readChan chan []byte) {
 	return this.readChan
 }
 
-func (this *SerialRemote) Write(data []byte) (bytesWritten int, err error) {
+func (this *SerialRemote) Write(data []byte) {
 
-	return this.port.Write(data)
+	this.writeChan <- data
 }
 
-func (this *SerialRemote) run() {
+func (this *SerialRemote) writer() {
+
+	for {
+		select {
+		case <-this.ctrlChan:
+			return
+		case buf := <-this.writeChan:
+			this.port.Write(buf)
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+}
+
+func (this *SerialRemote) reader() {
 
 	for this.running {
 
@@ -80,8 +109,6 @@ func (this *SerialRemote) run() {
 		}
 
 		if bytesRead > 0 {
-
-			fmt.Printf("Read %d bytes\n", bytesRead)
 
 			this.readChan <- buf[0:bytesRead]
 		}

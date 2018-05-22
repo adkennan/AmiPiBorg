@@ -1,8 +1,9 @@
 package main
 
 const (
-	HT_Ping = 1
-	HT_Date = 2
+	HT_Ping  = 1
+	HT_Date  = 2
+	HT_Input = 3
 )
 
 type HandlerFactory struct {
@@ -27,5 +28,6 @@ func (this *HandlerFactory) CreateHandler(handlerId uint16) Handler {
 
 type Handler interface {
 	Init(outChan chan *OutPacket)
+	Quit()
 	HandlePacket(p *InPacket)
 }

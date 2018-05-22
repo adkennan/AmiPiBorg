@@ -16,9 +16,15 @@ func (this *PingHandler) HandlePacket(p *InPacket) {
 
 	fmt.Println(p.ConnId, ": Ping")
 
+	data := make([]byte, len(p.Data))
+	copy(data, p.Data)
+
 	this.outChan <- &OutPacket{
 		PacketType: MT_Data,
-		Data:       p.Data}
+		Data:       data}
+}
+
+func (this *PingHandler) Quit() {
 }
 
 func NewPingHandler() Handler {

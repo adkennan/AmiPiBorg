@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 )
@@ -21,6 +22,7 @@ type Server struct {
 	remote         Remote
 	state          uint16
 	packId         uint16
+	lastInPackId   uint16
 	connChan       chan *OutPacket
 	connections    map[uint16]*Connection
 	handlerFactory *HandlerFactory
@@ -66,6 +68,7 @@ func (this *Server) HandleControlPacket(p *InPacket) {
 	case MT_Init:
 		this.state = SS_Connected
 		this.packId = 1
+		this.lastInPackId = 1
 		this.WritePacket(DEFAULT_CONNECTION, MT_Hello, []byte{})
 		this.connections = make(map[uint16]*Connection)
 		fmt.Printf("Server Connected\n")
@@ -107,6 +110,21 @@ func (this *Server) CreateConnection(p *InPacket) {
 
 func (this *Server) HandlePacket(p *InPacket) (err error) {
 
+	fmt.Printf("Packet %d, flags %d\n", p.PacketId, p.Flags)
+	if (p.Flags & PF_Resend) == 0 {
+
+		if p.PacketId-1 > this.lastInPackId {
+
+			fmt.Printf("Expecting packet %d, got packet %d\n", this.lastInPackId+1, p.PacketId)
+
+			for ix := this.lastInPackId + 1; ix < p.PacketId; ix++ {
+				this.RequestResend(ix)
+			}
+		}
+
+		this.lastInPackId = p.PacketId
+	}
+
 	if p.ConnId == DEFAULT_CONNECTION {
 		this.HandleControlPacket(p)
 	} else {
@@ -131,6 +149,14 @@ func (this *Server) HandlePacket(p *InPacket) (err error) {
 	}
 
 	return nil
+}
+
+func (this *Server) RequestResend(packId uint16) {
+
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, packId)
+
+	this.WritePacket(DEFAULT_CONNECTION, MT_Resend, buf.Bytes())
 }
 
 func (this *Server) WritePacket(connId uint16, packetType uint8, data []byte) (packId uint16, err error) {
