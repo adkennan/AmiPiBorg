@@ -91,6 +91,11 @@ func (this *PacketReader) processBuffer(buf []byte) {
 			// No packet found at all.
 			fmt.Printf("Bad data? %d bytes\n", len(this.buf))
 
+			for _, c := range this.buf {
+				fmt.Printf("%2x ", c)
+			}
+			fmt.Println()
+
 			this.buf = this.buf[:0]
 			return
 		}

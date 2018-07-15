@@ -42,10 +42,11 @@ func (this *PacketWriter) Write(packType uint8, flags uint8, connId uint16, pack
 	buf.Write(data)
 
 	if (flags & PF_PadByte) == PF_PadByte {
-		err = binary.Write(buf, binary.BigEndian, uint8(0))
-		if err != nil {
-			return err
-		}
+		//err = binary.Write(buf, binary.BigEndian, uint8(0))
+		//if err != nil {
+		//	return err
+		//}
+		buf.Write([]uint8{0})
 	}
 
 	b := buf.Bytes()

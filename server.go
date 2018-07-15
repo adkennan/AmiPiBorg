@@ -13,6 +13,7 @@ const (
 
 const (
 	MaxRecentPackets = 100
+	ServerVersion    = 1
 )
 
 type Server struct {
@@ -69,7 +70,7 @@ func (this *Server) HandleControlPacket(p *InPacket) {
 		this.state = SS_Connected
 		this.packId = 1
 		this.lastInPackId = 1
-		this.WritePacket(DEFAULT_CONNECTION, MT_Hello, []byte{})
+		this.SendHello()
 		this.connections = make(map[uint16]*Connection)
 		fmt.Printf("Server Connected\n")
 
@@ -84,6 +85,29 @@ func (this *Server) HandleControlPacket(p *InPacket) {
 	case MT_Resend:
 		this.resendPacket(binary.BigEndian.Uint16(p.Data))
 	}
+}
+
+func (this *Server) SendHello() {
+
+	buf := new(bytes.Buffer)
+
+	binary.Write(buf, binary.BigEndian, uint16(ServerVersion))
+
+	ids, names := this.handlerFactory.GetHandlerDescriptions()
+
+	binary.Write(buf, binary.BigEndian, uint16(len(ids)))
+
+	for ix, id := range ids {
+
+		binary.Write(buf, binary.BigEndian, id)
+		name := names[ix]
+		buf.Write([]byte(name))
+		for ij := len(name); ij < 10; ij++ {
+			binary.Write(buf, binary.BigEndian, uint8(0))
+		}
+	}
+
+	this.WritePacket(DEFAULT_CONNECTION, MT_Hello, buf.Bytes())
 }
 
 func (this *Server) CreateConnection(p *InPacket) {

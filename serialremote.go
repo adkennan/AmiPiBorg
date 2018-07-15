@@ -50,7 +50,7 @@ func (this *SerialRemote) Open() (err error) {
 	*/
 	config := &serial.Config{
 		Name:     this.devName,
-		Baud:     9600,
+		Baud:     19200,
 		Size:     serial.DefaultSize,
 		Parity:   serial.ParityNone,
 		StopBits: serial.Stop1}
