@@ -8,6 +8,7 @@ const (
 	HT_Ping  = 1
 	HT_Date  = 2
 	HT_Input = 3
+	HT_FS    = 4
 )
 
 type handlerDesc struct {

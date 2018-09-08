@@ -9,6 +9,7 @@ func main() {
 	hf.AddHandler(HT_Ping, "PING", NewPingHandler)
 	hf.AddHandler(HT_Date, "DATE", NewDateHandler)
 	hf.AddHandler(HT_Input, "INPUT", NewInputHandler)
+	hf.AddHandler(HT_FS, "FS", NewFsHandler)
 
 	srv := NewServer(r, hf)
 

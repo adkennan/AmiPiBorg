@@ -60,6 +60,8 @@ func (this *SerialRemote) Open() (err error) {
 		return err
 	}
 
+	this.port.Flush()
+
 	this.running = true
 	go this.reader()
 	go this.writer()
