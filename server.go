@@ -48,7 +48,7 @@ func NewServer(remote Remote, handlerFac *HandlerFactory) (srv *Server) {
 		remote:         remote,
 		state:          SS_Disconnected,
 		packId:         1,
-		connChan:       make(chan *OutPacket, 100),
+		connChan:       make(chan *OutPacket, 1000),
 		connections:    nil,
 		handlerFactory: handlerFac,
 		recentPackets:  make([]*OutPacket, MaxRecentPackets+1)}
@@ -134,7 +134,6 @@ func (this *Server) CreateConnection(p *InPacket) {
 
 func (this *Server) HandlePacket(p *InPacket) (err error) {
 
-	fmt.Printf("Packet %d, flags %d\n", p.PacketId, p.Flags)
 	if (p.Flags & PF_Resend) == 0 {
 
 		if p.PacketId-1 > this.lastInPackId {
@@ -183,8 +182,8 @@ func (this *Server) RequestResend(packId uint16) {
 	this.WritePacket(DEFAULT_CONNECTION, MT_Resend, buf.Bytes())
 }
 
-func (this *Server) WritePacket(connId uint16, packetType uint8, data []byte) (packId uint16, err error) {
-	pId := this.packId
+func (this *Server) WritePacket(connId uint16, packetType uint8, data []byte) (pId uint16, err error) {
+	pId = this.packId
 	err = this.packetWriter.Write(packetType, 0, connId, pId, data)
 	if err != nil {
 		return 0, err

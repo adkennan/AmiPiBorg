@@ -16,7 +16,7 @@ func NewConnection(connId uint16, h Handler, outChan chan *OutPacket) (cnn *Conn
 		handler:     h,
 		inChan:      make(chan *InPacket, 100),
 		outChan:     outChan,
-		handlerChan: make(chan *OutPacket, 100),
+		handlerChan: make(chan *OutPacket, 1000),
 		ctrlChan:    make(chan bool)}
 
 	h.Init(cnn.handlerChan)
